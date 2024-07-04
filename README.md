@@ -10,7 +10,7 @@ Proyek ini bertujuan untuk menganalisis dataset penyewaan sepeda untuk memahami 
 2. Bagaimana pengaruh cuaca (suhu, suhu yang dirasakan, kelembapan, kecepatan angin) terhadap jumlah penyewaan sepeda?
 3. Apakah ada tren musiman dalam penyewaan sepeda?
 4. Bagaimana distribusi penyewaan sepeda berdasarkan tipe pengguna (casual, registered)?
-5. Apakah ada jam tertentu dalam penyewaan sepeda?
+5. Bagaimana polo penyewaan sepeda berdasarkan jam ?
 
 ## Langkah-langkah Analisis
 

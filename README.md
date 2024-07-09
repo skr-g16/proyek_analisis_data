@@ -2,7 +2,7 @@
 # Dashboard Penyewaan Sepeda
 ## Setup Environment - Anaconda
 ```
-conda create --name main-ds python=3.9
+conda create --name main-ds python=3.12.4
 conda activate main-ds
 pip install -r requirements.txt
 ```

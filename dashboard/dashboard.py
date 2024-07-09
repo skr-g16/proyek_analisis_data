@@ -20,14 +20,12 @@ def create_plot_month(df):
 def plot_weather_scatter(df):
     weather_factors = ["temp", "atemp", "hum", "windspeed"]
     fig, axs = plt.subplots(2, 2, figsize=(15, 10))
-
     for ax, factor in zip(axs.flatten(), weather_factors):
         sns.scatterplot(data=df, x=factor, y="cnt", alpha=0.5, ax=ax)
         ax.set_title(f'Pengaruh {factor.capitalize()} Terhadap Penyewaan Sepeda')
         ax.set_xlabel(factor.capitalize())
         ax.set_ylabel('Jumlah Penyewaan')
-        ax.grid(True, linestyle='--', alpha=0.7)
-    
+        ax.grid(True, linestyle='--', alpha=0.7)   
     plt.tight_layout()
     st.pyplot(fig)
 
@@ -63,7 +61,7 @@ hourly_df = hour_df[(hour_df["dteday"] >= str(start_date)) &
 week_df = create_plot_week(main_df)
 month_df = create_plot_month(main_df)
 
-st.markdown("<h1 style='text-align: center;'>Dashboard Penyewaan Sepeda</h1>", unsafe_allow_html=True)
+st.title('Dashboard Penyewaan Sepeda')
 total_rentals = main_df['cnt'].sum()
 avg_temp = main_df['temp'].mean()
 avg_humidity = main_df['hum'].mean()
@@ -72,7 +70,7 @@ st.metric(label="Total Penyewaan", value=f"{total_rentals:,}")
 st.metric(label="Rata-Rata Suhu", value=f"{avg_temp:.2f}")
 st.metric(label="Rata-Rata Kelembapan", value=f"{avg_humidity:.2f}")
 
-st.markdown("<h2 style='text-align: center;'>Pola Penyewaan Berdasarkan Hari dan Bulan</h2>", unsafe_allow_html=True)
+st.header("Pola Penyewaan Berdasarkan Hari dan Bulan")
 
 tab1, tab2 = st.tabs(['Hari', 'Bulan'])
 with tab1:
@@ -97,11 +95,9 @@ with tab2:
 
 # Pengaruh faktor cuaca
 st.header("Pengaruh Faktor Cuaca Terhadap Penyewaan Sepeda")
-
 with st.expander("Lihat Detail Pengaruh Cuaca"):
     plot_weather_scatter(main_df)
 
-# Pertanyaan 3: Perbedaan Tren Penyewaan Sepeda antara Hari Kerja dan Akhir Pekan selama Musim yang Berbeda
 st.header("Tren Penyewaan Sepeda antara Hari Kerja dan Akhir Pekan selama Musim yang Berbeda")
 # Filter untuk hari kerja dan akhir pekan
 weekday_data = day_df[day_df['workingday'] == 'Weekday']
@@ -112,7 +108,6 @@ weekday_seasonal_rentals = weekday_data.groupby('season')['cnt'].mean().sort_val
 
 # Kelompokkan akhir pekan berdasarkan musim dan hitung rata-rata penyewaan
 weekend_seasonal_rentals = weekend_data.groupby('season')['cnt'].mean().sort_values(ascending=False)
-
 plt.figure(figsize=(10, 6))
 plt.bar(weekday_seasonal_rentals.index, weekday_seasonal_rentals.values, label='Hari Kerja', color='blue')
 plt.bar(weekend_seasonal_rentals.index, weekend_seasonal_rentals.values, label='Akhir Pekan', alpha=0.7, color='orange')
@@ -122,23 +117,17 @@ plt.ylabel('Rata-rata Penyewaan Sepeda')
 plt.legend()
 st.pyplot(plt)
 
-# Pertanyaan 4: Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna
 st.header("Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna")
-
 total_casual = main_df['casual'].sum()
 total_registered = main_df['registered'].sum()
-
 plt.figure(figsize=(10, 6))
 explode = [0.1, 0]
 plt.pie([total_casual, total_registered], labels=['Casual', 'Registered'], autopct='%1.1f%%', explode=explode)
 plt.title('Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna')
 st.pyplot(plt)
 
-# Pertanyaan 5: Jam-jam Puncak Penyewaan Sepeda
 st.header("Jam-jam Puncak Penyewaan Sepeda")
-
 hourly_rentals = hourly_df.groupby('hr')['cnt'].sum().sort_values(ascending=True)
-
 plt.figure(figsize=(10, 6))
 colors = ["#D3D3D3"] * len(hourly_rentals)
 colors[-1] = "#90CAF9"  # Warna biru untuk nilai maksimal

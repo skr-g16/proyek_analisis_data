@@ -6,104 +6,144 @@ import streamlit as st
 
 sns.set(style='dark')
 
-day_df = pd.read_csv('dashboard/clean_day_df.csv')
-hour_df = pd.read_csv('dashboard/clean_hour_df.csv')
+day_df = pd.read_csv('./data/day.csv')
+hour_df = pd.read_csv('./data/hour.csv')
 
+def create_plot_week(df):
+    week_df = df.groupby('weekday').agg({'cnt':'sum'}).sort_values(by='cnt', ascending=True)
+    return week_df
 
+def create_plot_month(df):
+    month_df = df.groupby('mnth').agg({'cnt':'sum'}).sort_values(by='cnt', ascending=True)
+    return month_df
 
-def plot_tren_mingguan(df):
-    tren_mingguan = df.groupby('weekday')['cnt'].sum().reset_index()
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=tren_mingguan, x='weekday', y='cnt',order=tren_mingguan['weekday'])
-    plt.title('Rata-Rata Harian Penyewaan sepeda dalam Mingguan')
-    plt.xlabel('Hari\n0 = Minggu, 6 = Sabtu')
-    plt.ylabel('Rata-rata Penyewaan Sepeda')
-    st.pyplot(plt)
+def plot_weather_scatter(df):
+    weather_factors = ["temp", "atemp", "hum", "windspeed"]
+    fig, axs = plt.subplots(2, 2, figsize=(15, 10))
 
-def plot_tren_bulanan(df):
-    tren_bulanan = df.groupby('mnth')['cnt'].sum().reset_index()
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=tren_bulanan, x='mnth', y='cnt', order=tren_bulanan['mnth'])
-    plt.title('Rata-Rata Harian Penyewaan sepeda dalam bulanan')
-    plt.xlabel('Bulan\n 1 = Januari, 12 = Desember')
-    plt.ylabel('Rata-rata Penyewaan Sepeda')
-    st.pyplot(plt)
+    for ax, factor in zip(axs.flatten(), weather_factors):
+        sns.scatterplot(data=df, x=factor, y="cnt", alpha=0.5, ax=ax)
+        ax.set_title(f'Pengaruh {factor.capitalize()} Terhadap Penyewaan Sepeda')
+        ax.set_xlabel(factor.capitalize())
+        ax.set_ylabel('Jumlah Penyewaan')
+        ax.grid(True, linestyle='--', alpha=0.7)
     
-def ensure_all_weathersit_categories(df):
-    # Buat DataFrame dengan semua kategori weathersit dan cnt = 0
-    all_weathersit = pd.DataFrame({'weathersit': [1, 2, 3, 4], 'cnt': [0, 0, 0, 0]})
-    
-    # Hitung rata-rata penyewaan per kategori weathersit
-    weather_counts = df.groupby('weathersit')['cnt'].mean().reset_index()
+    plt.tight_layout()
+    st.pyplot(fig)
 
-    # Gabungkan dengan data asli untuk memastikan semua kategori ada
-    combined_df = pd.concat([weather_counts, all_weathersit]).drop_duplicates('weathersit', keep='first').sort_values('weathersit').reset_index(drop=True)
+datetime_columns = ["dteday"]
+day_df.sort_values(by="dteday", inplace=True)
+day_df.reset_index(inplace=True)
 
-    return combined_df
+for column in datetime_columns:
+    day_df[column] = pd.to_datetime(day_df[column])
 
-def plot_kondisi_cuaca(df):
-    df = ensure_all_weathersit_categories(df)
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=df, x='weathersit', y='cnt', estimator='mean', palette='Blues')
-    plt.title('Rata-Rata harian Penyewa berdasarkan kondisi cuaca')
-    plt.xlabel('Kondisi Cuaca')
-    plt.ylabel('Rata-Rata Penyewa Sepeda')
-    plt.legend()
-    plt.xticks(ticks=[0, 1, 2, 3])
-    st.pyplot(plt)
+min_date = day_df["dteday"].min()
+max_date = day_df["dteday"].max()
 
-def plot_musiman(df):
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=df, x='season', y='cnt', estimator='mean')
-    plt.title('Rata-Rata Harian Penyewa Sepeda Berdasarkan Musim')
-    plt.xlabel('Musim')
-    plt.ylabel('Rata-Rata Penyewa Sepeda')
-    st.pyplot(plt)
-
-def plot_tipe_pengguna(df):
-    explode=[0,0.1]
-    total_pengguna = df[['casual', 'registered']].sum()
-    labels = [f'Casual: {total_pengguna["casual"]}', f'Registered: {total_pengguna["registered"]}']
-    plt.figure(figsize=(8, 8))
-    plt.pie(total_pengguna, labels=labels, autopct='%1.1f%%', startangle=140, colors=['green', 'red'],explode=explode)
-    plt.title('Distribusi Penyewa Sepeda Berdasarkan Tipe Pengguna')
-    plt.axis('equal') 
-    st.pyplot(plt)
-
-def plot_jam_penyewaan(df):
-    Hitung_jam = df.groupby('hr')['cnt'].sum().reset_index().sort_values(by='cnt', ascending=False).head(10)
-    plt.figure(figsize=(12, 8))
-    sns.barplot(data=Hitung_jam, x='cnt', y='hr', order=Hitung_jam['hr'], orient='h')
-    plt.title('Total Penyewa Sepeda Berdasarkan Jam')
-    plt.xlabel('Total Penyewa')
-    plt.ylabel('Jam Per Hari')
-    st.pyplot(plt)
-
-
-st.title("Bike Rentals Analysis")
-st.header("Pola Penyewaan Berdasarkan Hari dan Bulan")
-tab1, tab2 = st.tabs(['Hari', 'Bulan'])
-with tab1:
-    plot_tren_mingguan(day_df)
-    
-with tab2:
-    plot_tren_bulanan(day_df)
-
-st.header("Pengaruh Cuaca terhadap Jumlah Penyewaan Sepeda")
-plot_kondisi_cuaca(day_df)
-with st.expander("Penjelasan"):
-    st.write('''
-        - 1: Clear, Few clouds, Partly cloudy, Partly cloudy
-		\n- 2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist
-		\n- 3: Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds
-		\n- 4: Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog'''
+with st.sidebar:    
+    # Mengambil start_date & end_date dari date_input
+    start_date, end_date = st.date_input(
+        label='Rentang Waktu',min_value=min_date,
+        max_value=max_date,
+        value=[min_date, max_date]
+    )
+    selected_season = st.multiselect(
+    label='Pilih Musim', options=day_df['season'].unique(), default=day_df['season'].unique()
     )
 
-st.header("Tren Musiman dalam Penyewaan Sepeda")
-plot_musiman(day_df)
+main_df = day_df[(day_df["dteday"] >= str(start_date)) & 
+                (day_df["dteday"] <= str(end_date)) &
+                (day_df["season"].isin(selected_season))]
 
+hourly_df = hour_df[(hour_df["dteday"] >= str(start_date)) & 
+                    (hour_df["dteday"] <= str(end_date))&
+                    (hour_df["season"].isin(selected_season))]
+
+week_df = create_plot_week(main_df)
+month_df = create_plot_month(main_df)
+
+st.markdown("<h1 style='text-align: center;'>Dashboard Penyewaan Sepeda</h1>", unsafe_allow_html=True)
+total_rentals = main_df['cnt'].sum()
+avg_temp = main_df['temp'].mean()
+avg_humidity = main_df['hum'].mean()
+
+st.metric(label="Total Penyewaan", value=f"{total_rentals:,}")
+st.metric(label="Rata-Rata Suhu", value=f"{avg_temp:.2f}")
+st.metric(label="Rata-Rata Kelembapan", value=f"{avg_humidity:.2f}")
+
+st.markdown("<h2 style='text-align: center;'>Pola Penyewaan Berdasarkan Hari dan Bulan</h2>", unsafe_allow_html=True)
+
+tab1, tab2 = st.tabs(['Hari', 'Bulan'])
+with tab1:
+    plt.figure(figsize=(10, 6))
+    colors = ["#D3D3D3"] * len(week_df)
+    colors[-1] = "#90CAF9" 
+    plt.barh(week_df.index, week_df['cnt'], color=colors)
+    plt.title('Jumlah Penyewaan Sepeda Berdasarkan Hari')
+    plt.xlabel('Jumlah Penyewaan')
+    plt.ylabel('Hari')
+    st.pyplot(plt)
+    
+with tab2:
+    plt.figure(figsize=(10, 6))
+    colors = ["#D3D3D3"] * len(month_df)
+    colors[-1] = "#90CAF9" 
+    plt.barh(month_df.index, month_df['cnt'], color=colors)
+    plt.title('Jumlah Penyewaan Sepeda Berdasarkan Bulan')
+    plt.xlabel('Jumlah Penyewaan')
+    plt.ylabel('Bulan')
+    st.pyplot(plt)
+
+# Pengaruh faktor cuaca
+st.header("Pengaruh Faktor Cuaca Terhadap Penyewaan Sepeda")
+
+with st.expander("Lihat Detail Pengaruh Cuaca"):
+    plot_weather_scatter(main_df)
+
+# Pertanyaan 3: Perbedaan Tren Penyewaan Sepeda antara Hari Kerja dan Akhir Pekan selama Musim yang Berbeda
+st.header("Tren Penyewaan Sepeda antara Hari Kerja dan Akhir Pekan selama Musim yang Berbeda")
+# Filter untuk hari kerja dan akhir pekan
+weekday_data = day_df[day_df['workingday'] == 'Weekday']
+weekend_data = day_df[day_df['workingday'] == 'Weekend']
+
+# Kelompokkan hari kerja berdasarkan musim dan hitung rata-rata penyewaan
+weekday_seasonal_rentals = weekday_data.groupby('season')['cnt'].mean().sort_values(ascending=False)
+
+# Kelompokkan akhir pekan berdasarkan musim dan hitung rata-rata penyewaan
+weekend_seasonal_rentals = weekend_data.groupby('season')['cnt'].mean().sort_values(ascending=False)
+
+plt.figure(figsize=(10, 6))
+plt.bar(weekday_seasonal_rentals.index, weekday_seasonal_rentals.values, label='Hari Kerja', color='blue')
+plt.bar(weekend_seasonal_rentals.index, weekend_seasonal_rentals.values, label='Akhir Pekan', alpha=0.7, color='orange')
+plt.title('Tren Musiman Penyewaan Sepeda')
+plt.xlabel('Musim')
+plt.ylabel('Rata-rata Penyewaan Sepeda')
+plt.legend()
+st.pyplot(plt)
+
+# Pertanyaan 4: Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna
 st.header("Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna")
-plot_tipe_pengguna(day_df)
 
-st.header("Penyewaan Sepeda Berdasarkan Jam")
-plot_jam_penyewaan(hour_df)
+total_casual = main_df['casual'].sum()
+total_registered = main_df['registered'].sum()
+
+plt.figure(figsize=(10, 6))
+explode = [0.1, 0]
+plt.pie([total_casual, total_registered], labels=['Casual', 'Registered'], autopct='%1.1f%%', explode=explode)
+plt.title('Distribusi Penyewaan Sepeda Berdasarkan Tipe Pengguna')
+st.pyplot(plt)
+
+# Pertanyaan 5: Jam-jam Puncak Penyewaan Sepeda
+st.header("Jam-jam Puncak Penyewaan Sepeda")
+
+hourly_rentals = hourly_df.groupby('hr')['cnt'].sum().sort_values(ascending=True)
+
+plt.figure(figsize=(10, 6))
+colors = ["#D3D3D3"] * len(hourly_rentals)
+colors[-1] = "#90CAF9"  # Warna biru untuk nilai maksimal
+hourly_rentals.plot(kind='barh', color=colors)
+plt.title('Penyewaan Sepeda Per Jam')
+plt.xlabel('Jumlah Penyewaan')
+plt.ylabel('Jam')
+st.pyplot(plt)

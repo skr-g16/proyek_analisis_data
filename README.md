@@ -1,5 +1,5 @@
-# Bike Rentals Dashboard ✨
 
+# Dashboard Penyewaan Sepeda
 ## Setup Environment - Anaconda
 ```
 conda create --name main-ds python=3.9
@@ -18,5 +18,5 @@ pip install -r requirements.txt
 
 ## Run steamlit app
 ```
-streamlit run dashboard.py
+streamlit run dashboard/dashboard.py
 ```

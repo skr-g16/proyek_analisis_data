@@ -6,8 +6,8 @@ import streamlit as st
 
 sns.set(style='dark')
 
-day_df = pd.read_csv('./data/day.csv')
-hour_df = pd.read_csv('./data/hour.csv')
+day_df = pd.read_csv('./dashboard/day.csv')
+hour_df = pd.read_csv('./dashboard/hour.csv')
 
 def create_plot_week(df):
     week_df = df.groupby('weekday').agg({'cnt':'sum'}).sort_values(by='cnt', ascending=True)

@@ -67,8 +67,8 @@ avg_temp = main_df['temp'].mean()
 avg_humidity = main_df['hum'].mean()
 
 st.metric(label="Total Penyewaan", value=f"{total_rentals:,}")
-st.metric(label="Rata-Rata Suhu", value=f"{avg_temp:.2f}")
-st.metric(label="Rata-Rata Kelembapan", value=f"{avg_humidity:.2f}")
+st.metric(label="Rata-Rata Suhu", value=f"{avg_temp:.2f} °C")
+st.metric(label="Rata-Rata Kelembapan", value=f"{avg_humidity:.2f} %")
 
 st.header("Pola Penyewaan Berdasarkan Hari dan Bulan")
 
